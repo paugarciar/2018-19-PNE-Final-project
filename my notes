@@ -1,0 +1,21 @@
+API REST BASIC LEVEL
+1. /listSpecies
+    GET cafe/genetree/id/:id
+        Name, common name, scientific name..
+        Ex: /cafe/genetree/id/ENSGT00390000003602?content-type=application/json
+
+    GET genetree/member/symbol/:species/:symbol
+        giving the species name and symbol it gives you the genID
+
+    GET info/compara/species_sets/:method
+        Filter by compara method. Use one the methods returned by /info/compara/methods endpoint EPO
+        it gives all the names of mammals, primates..
+        Ex: /info/compara/species_sets/EPO?content-type=application/json
+
+2. /karyotype
+    GET info/assembly/:species -> "karyotype"
+    Ex: /info/assembly/homo_sapiens?content-type=application/json
+
+3. /chrlength
+    GET info/assembly/:species/:region_name->"length"
+    Ex: /info/assembly/homo_sapiens/X?content-type=application/json
