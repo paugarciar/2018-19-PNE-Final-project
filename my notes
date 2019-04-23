@@ -12,6 +12,11 @@ API REST BASIC LEVEL
         it gives all the names of mammals, primates..
         Ex: /info/compara/species_sets/EPO?content-type=application/json
 
+    ->GET info/species
+        All species name
+        Ex: /info/species?content-type=application/json
+
+
 2. /karyotype
     GET info/assembly/:species -> "karyotype"
     Ex: /info/assembly/homo_sapiens?content-type=application/json
