@@ -55,11 +55,16 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
             page = "main-page.html"
 
         elif calling_response == "/listSpecies":  # Using the resource /Seq
+            path = self.path
+            p = (path.replace("=", ",")).replace("&", ",")
+            path = p.split(",")  # Making a list dividing the string in the = and & symbols
             for specie in result["species"]:
                 text += specie["name"]+"<br>"
                 # VOY POR AQUI
-            for index in range(len(result["species"])):
-                text += specie["name"][index]
+            #for index in range(len(result["species"])):
+                #text += result["species"][index]["name"]+"<br>"
+                #if index == limit:
+                    #break
 
             page = "response.html"
 
