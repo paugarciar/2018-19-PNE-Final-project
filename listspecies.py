@@ -51,20 +51,37 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
 
         # Assigning to the variable page different html pages names in function of the request
         text = ""
+        list_species = []  # SE PODRÍA HACER UNA LISTA DE TEXT?
         if self.path == "/":
             page = "main-page.html"
 
         elif calling_response == "/listSpecies":  # Using the resource /Seq
-            path = self.path
-            p = (path.replace("=", ",")).replace("&", ",")
-            path = p.split(",")  # Making a list dividing the string in the = and & symbols
-            for specie in result["species"]:
-                text += specie["name"]+"<br>"
-                # VOY POR AQUI
+
+            p = (self.path.replace("=", ",")).replace("&", ",")
+            ins = p.split(",")  # Making a list of instructions dividing the string in the = and & symbols
+            print(ins)
+            for s in result["species"]:
+                list_species.append(s["name"])
+                #text += specie["name"]+"<br>"
+            if len(ins) == 2:
+                limit = int(ins[1])
+                for i in range(limit):
+                    text += list_species[i]+"<br>"
+
+            else:
+                for s in list_species:
+                    text += s + "<br>"
+
+
+            print(len(ins))
+            # idea de mejora
             #for index in range(len(result["species"])):
                 #text += result["species"][index]["name"]+"<br>"
-                #if index == limit:
-                    #break
+                #if len(ins) == 2:
+                    #limit = ins[1]
+                    #if index == limit:
+                        #print("B")
+                        #break
 
             page = "response.html"
 
