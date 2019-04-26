@@ -1,23 +1,17 @@
-# Starting from practice 7
-
-# ------MY NOTES of api rest-------
-# GET info/genomes/:genome_name 	"base_count"->number of bases
-# EXAMPLE
-# /info/genomes/nanoarchaeum_equitans_kin4_m?content-type=application/json
-
-# GET sequence/id/:id
-# EXAMPLES
-# /sequence/id/GENSCAN00000000001?object_type=predictiontranscript;type=protein;content-type=..
-# ..application/json;db_type=core;species=homo_sapiens
-# /sequence/id/ENSP00000288602?content-type=application/json-> sequence
-
-
-# First we obtain the FRAT1 gene sequence
+import http.server
 import http.client
 import json
+import socketserver
+import termcolor
+
+# Server's port
+PORT = 8000
+
+
+# Client
 
 HOSTNAME = "rest.ensembl.org"
-ENDPOINT = "/sequence/id/ENSG00000165879?content-type=application/json"
+ENDPOINT = "/info/species?content-type=application/json"
 METHOD = "GET"
 
 headers = {'User-Agent': 'http-client'}
@@ -39,54 +33,85 @@ conn.close()
 result = json.loads(text_json)
 
 
-# We create the Seq class
-class Seq:
-    """A class for representing sequences"""
+# Class with our Handler that inheritates all his methods and properties
+class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the properties of the library
 
-    def __init__(self, strbases):
-        self.strbases = strbases  # self.strbases now represents my initial string
+    def do_GET(self):
+        """This method is called whenever the client invokes the GET method
+        in the HTTP protocol request"""
 
-    # Length of the string
-    def len(self):
-        return len(self.strbases)  # returns the length of our string(self.strbases)
+        # Printing in the server some useful information
+        print("GET received")
+        print("Request line:" + self.requestline)
+        print(" Cmd: " + self.command)
+        print(" Path: " + self.path)
 
-    # Number of a concrete base
-    def count(self, base):
-        res = self.strbases.count(base)  # counting the base that we will introduce
-        return res
+        # Separating and selecting the information of the path
+        calling_response = self.path.split("?")[0]
 
-    # Percentage of a concrete base
-    def perc(self, base):
-        tl = self.len()
-        for e in base:
-            n = self.count(e)
-            res = round(100.0 * n / tl, 1)  # percentage with one decimal of precision
-            return res
+        # Assigning to the variable page different html pages names in function of the request
+        text = ""
+        list_species = []
+        if self.path == "/":
+            page = "main-page.html"
 
-    # The percentage of the most popular  base
-    def results(self, dict_p):
-        s1 = "The total number of bases in FRAT1 gene is: "+str(self.len())
-        s2 = "The number of T bases is: "+str(self.count("T"))
-        s3 = ""
-        s4 = ""
-        for key, value in dict_p.items():
-            if value == max(dict_p.values()):
-                s3 = "The most popular base is " + str(key) + " and its percentage is " + str(value)
-            s4 += "The percentage of " + str(key) + " is " + str(value) + "\n"
+        elif calling_response == "/listSpecies":  # Using the resource /listSpecies
 
-        s = s1 + "\n" + s2 + "\n" + s3 + "\n" + s4
-        return s
+            p = (self.path.replace("=", ",")).replace("&", ",")
+            ins = p.split(",")  # Making a list of instructions dividing the string in the = and & symbols
+            print(ins)
+            for s in result["species"]:
+                list_species.append(s["name"])
+
+            if len(ins) == 2:
+                limit = int(ins[1])
+                for i in range(limit):
+                    text += list_species[i]+"<br>"
+
+            else:
+                for s in list_species:
+                    text += s + "<br>"
+
+            page = "response.html"
 
 
-# --Main program
-# Creating an object and printing the results
-sequence = Seq(result["seq"])
 
-bases = "ACTG"  # string to iterate over the bases
-percentage = {}  # dictionary for percentages
+        else:
+            page = "error.html"
 
-# adding information to the dictionary
-for i in bases:
-    percentage[i] = str(sequence.perc(i))+"%"  # percentage symbol string need another string to be added
+        # -- printing the request line
+        termcolor.cprint(self.requestline, 'green')
 
-print(sequence.results(percentage))  # printing finally the results
+        f = open(page, 'r')
+        contents = f.read()  # reading the contents of the selected page
+
+        # If the html response page is requested change the word text by the text of the user
+        if page == "response.html":
+            contents = contents.replace("text", text)
+
+        # Generating and sending the response message according to the request
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/html')
+        self.send_header('Content-Length', len(str.encode(contents)))
+        self.end_headers()
+
+        # -- sending the body of the response message
+        self.wfile.write(str.encode(contents))
+
+
+# -- MAIN PROGRAM
+
+
+socketserver.TCPServer.allow_reuse_address = True
+
+with socketserver.TCPServer(("", PORT), TestHandler) as httpd:
+
+    # "" means that the program must use the IP address of the computer
+    print("Serving at PORT: {}".format(PORT))
+
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        httpd.server_close()
+
+print("The server is stopped")
