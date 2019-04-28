@@ -5,14 +5,16 @@
     <title>MAIN PAGE</title>
   </head>
   <body>
-    <h2>FINAL PRACTICE</h2>
+    <h1>FINAL PRACTICE</h1>
+    <h3>PAULA GARCIA RAMOS<br><br></h3>
 
+
+    <h4 style="color:darkviolet;">LIST OF SPECIES</h4>
     <form action="listSpecies" method="get">
       List of all species
       <input type="submit" value="SEND">
       <br><br>
       </form>
-
 
     <form action="listSpecies" method="get">
       Limit  <input type="text" name="limit">
@@ -20,11 +22,22 @@
       <br><br>
       </form>
 
+
+    <h4 style="color:darkviolet;">KARYOTYPE</h4>
     <form action="karyotype" method="get">
       Karyotype of the specie:  <input type="text" name="specie">
       <input type="submit" value="SEND">
       <br><br>
       </form>
 
+
+    <h4 style="color:darkviolet;">LENGTH OF THE CHROMOSOME</h4>
+    <form action="chromosomeLength" method="get">
+      Specie:  <input type="text" name="specie">
+      <br><br>
+      Chromosome:  <input type="text" name="chromo">
+      <input type="submit" value="SEND">
+      <br><br>
+      </form>
   </body>
 </html>
