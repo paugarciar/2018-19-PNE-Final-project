@@ -12,6 +12,7 @@ PORT = 8000
 
 HOSTNAME = "rest.ensembl.org"
 ENDPOINT = "/info/species?content-type=application/json"
+ENDPOINT1 = "/info/assembly/homo_sapiens?content-type=application/json"
 METHOD = "GET"
 
 headers = {'User-Agent': 'http-client'}
@@ -30,7 +31,7 @@ print(r1.status, r1.reason)
 text_json = r1.read().decode("utf-8")
 conn.close()
 
-result = json.loads(text_json)
+result1 = json.loads(text_json)
 
 
 # Class with our Handler that inheritates all his methods and properties
@@ -60,7 +61,7 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
             p = (self.path.replace("=", ",")).replace("&", ",")
             ins = p.split(",")  # Making a list of instructions dividing the string in the = and & symbols
             print(ins)
-            for s in result["species"]:
+            for s in result1["species"]:
                 list_species.append(s["name"])
 
             if len(ins) == 2:
@@ -74,7 +75,36 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
 
             page = "response.html"
 
+        elif calling_response == "/karyotype":  # Using the resource /karyotype
 
+            p = (self.path.replace("=", ",")).replace("&", ",")
+            ins = p.split(",")  # Making a list of instructions dividing the string in the = and & symbols
+            print(ins)
+
+            ENDPOINT1B = ENDPOINT1.replace("homo_sapiens", ins[1])
+
+            # -- Sending the request
+            conn.request(METHOD, ENDPOINT1B, None, headers)
+            r1 = conn.getresponse()
+
+            # -- Printing the status
+            print()
+            print("Response received: ", end='')
+            print(r1.status, r1.reason)
+
+            # -- Read the response's body and close connection
+            text_json = r1.read().decode("utf-8")
+            conn.close()
+
+            result = json.loads(text_json)
+            print(result["karyotype"])
+
+            for chrom in result["karyotype"]:
+                text += chrom+"<br>"
+
+            print(len(ins))
+
+            page = "response.html"
 
         else:
             page = "error.html"
