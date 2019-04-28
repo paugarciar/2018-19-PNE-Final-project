@@ -11,27 +11,30 @@ PORT = 8000
 # Client
 
 HOSTNAME = "rest.ensembl.org"
-ENDPOINT = "/info/species?content-type=application/json"
-ENDPOINT1 = "/info/assembly/homo_sapiens?content-type=application/json"
+ENDPOINT0 = "/info/species?content-type=application/json"
 METHOD = "GET"
 
 headers = {'User-Agent': 'http-client'}
 conn = http.client.HTTPSConnection(HOSTNAME)
 
-# -- Sending the request
-conn.request(METHOD, ENDPOINT, None, headers)
-r1 = conn.getresponse()
 
-# -- Printing the status
-print()
-print("Response received: ", end='')
-print(r1.status, r1.reason)
+def client(endpoint):
+    """function of a common client that asks information using json"""
 
-# -- Read the response's body and close connection
-text_json = r1.read().decode("utf-8")
-conn.close()
+    # -- Sending the request
+    conn.request(METHOD, endpoint, None, headers)
+    r1 = conn.getresponse()
 
-result1 = json.loads(text_json)
+    # -- Printing the status
+    print()
+    print("Response received: ", end='')
+    print(r1.status, r1.reason)
+
+    # -- Read the response's body and close connection
+    text_json = r1.read().decode("utf-8")
+    conn.close()
+
+    return json.loads(text_json)
 
 
 # Class with our Handler that inheritates all his methods and properties
@@ -49,7 +52,9 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
 
         # Separating and selecting the information of the path
         calling_response = self.path.split("?")[0]
-
+        p = (self.path.replace("=", ",")).replace("&", ",")
+        ins = p.split(",")  # Making a list of instructions dividing the string in the = and & symbols
+        print(ins)
         # Assigning to the variable page different html pages names in function of the request
         text = ""
         list_species = []
@@ -58,10 +63,8 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
 
         elif calling_response == "/listSpecies":  # Using the resource /listSpecies
 
-            p = (self.path.replace("=", ",")).replace("&", ",")
-            ins = p.split(",")  # Making a list of instructions dividing the string in the = and & symbols
-            print(ins)
-            for s in result1["species"]:
+            result0 = client(ENDPOINT0)
+            for s in result0["species"]:
                 list_species.append(s["name"])
 
             if len(ins) == 2:
@@ -77,33 +80,19 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
 
         elif calling_response == "/karyotype":  # Using the resource /karyotype
 
-            p = (self.path.replace("=", ",")).replace("&", ",")
-            ins = p.split(",")  # Making a list of instructions dividing the string in the = and & symbols
-            print(ins)
-
-            ENDPOINT1B = ENDPOINT1.replace("homo_sapiens", ins[1])
-
-            # -- Sending the request
-            conn.request(METHOD, ENDPOINT1B, None, headers)
-            r1 = conn.getresponse()
-
-            # -- Printing the status
-            print()
-            print("Response received: ", end='')
-            print(r1.status, r1.reason)
-
-            # -- Read the response's body and close connection
-            text_json = r1.read().decode("utf-8")
-            conn.close()
-
-            result = json.loads(text_json)
-            print(result["karyotype"])
-
-            for chrom in result["karyotype"]:
+            ENDPOINT1 = "/info/assembly/"+ins[1]+"?content-type=application/json"
+            result1 = client(ENDPOINT1)
+            for chrom in result1["karyotype"]:
                 text += chrom+"<br>"
+            page = "response.html"
 
-            print(len(ins))
+        elif calling_response == "/chromosomeLength":  # Using the resource /chromosomeLength
 
+            specie = ins[1]
+            ch = ins[-1]
+            ENDPOINT2 = "/info/assembly/"+specie+"/"+ch+"?content-type=application/json"
+            result2 = client(ENDPOINT2)
+            text += str(result2["length"])
             page = "response.html"
 
         else:
