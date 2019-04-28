@@ -17,22 +17,6 @@ METHOD = "GET"
 headers = {'User-Agent': 'http-client'}
 conn = http.client.HTTPSConnection(HOSTNAME)
 
-# -- Sending the request
-conn.request(METHOD, ENDPOINT1, None, headers)
-r1 = conn.getresponse()
-
-# -- Printing the status
-print()
-print("Response received: ", end='')
-print(r1.status, r1.reason)
-
-# -- Read the response's body and close connection
-text_json = r1.read().decode("utf-8")
-conn.close()
-
-result = json.loads(text_json)
-print(result["karyotype"])
-
 
 # Class with our Handler that inheritates all his methods and properties
 class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the properties of the library
@@ -62,10 +46,28 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
             ins = p.split(",")  # Making a list of instructions dividing the string in the = and & symbols
             print(ins)
 
+
+            specie = ins[1]
+            ENDPOINT1B = ENDPOINT1.replace("homo_sapiens", specie)
+
+            # -- Sending the request
+            conn.request(METHOD, ENDPOINT1B, None, headers)
+            r1 = conn.getresponse()
+
+            # -- Printing the status
+            print()
+            print("Response received: ", end='')
+            print(r1.status, r1.reason)
+
+            # -- Read the response's body and close connection
+            text_json = r1.read().decode("utf-8")
+            conn.close()
+
+            result = json.loads(text_json)
+            print(result["karyotype"])
+
             for chrom in result["karyotype"]:
                 text += chrom+"<br>"
-            # specie = ins[1]
-            # ENDPOINT1.replace("homo_spiens", specie)
 
             print(len(ins))
 
