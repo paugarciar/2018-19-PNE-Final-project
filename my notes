@@ -24,3 +24,31 @@ API REST BASIC LEVEL
 3. /chrlength
     GET info/assembly/:species/:region_name->"length"
     Ex: /info/assembly/homo_sapiens/X?content-type=application/json
+
+
+MEDIUM LEVEL
+1. /geneSeq
+    GET sequence/id/:id
+        It gives us the DNA of a gene ("seq") if we introduce its ID
+        Ex: /sequence/id/ENSP00000288602?content-type=application/json
+
+    1.b Searching the ID:
+        GET lookup/symbol/:species/:symbol
+            Find the ID from a symbol
+            Ex:/lookup/symbol/homo_sapiens/BRCA2?content-type=application/json
+            "display_name": "BRCA2", "object_type": "Gene", "start": 32315474, "assembly_name": "GRCh38",
+            "seq_region_name": "13", "strand": 1,"end": 32400266, "species": "homo_sapiens","id": "ENSG00000139618"
+
+2. /geneInfo
+    GET overlap/id/:id
+        Ex: /overlap/id/ENSG00000157764?feature=gene;content-type=application/json
+
+3. /geneCalc
+    my own operations
+
+4. /geneList
+   GET alignment/region/:species/:region
+        Introducing the region and specie, it returns all the sequences of DNA
+        Ex:/alignment/region/taeniopygia_guttata/2:106041430-106041480:1?content-type=application/json;species_set=..
+        ..taeniopygia_guttata;species_set=gallus_gallus;method=LASTZ_NET
+
