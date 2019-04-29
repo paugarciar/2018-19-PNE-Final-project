@@ -1,0 +1,15 @@
+                                    TEST REPORT-PAULA GARCIA RAMOS
+
+This project is divided in three levels that have different exercises, each of them has been tested separately
+to check its correct work and then they have been added together in the server.py file.
+
+
+BASIC LEVEL
+
+The endpoints required for this practice are: /, /listSpecies, /karyotype, /chrlength.
+Each one has been firstly tested with the example given by the API rest page and then using our own requests.
+If we open the browser and write "http://localhost:8000/" we enter into the main page in which we have all the
+available options:
+With /listSpecies endpoint:
+    -List of all species: "http://localhost:8000/listSpecies"
+    -Limit(list of a limited number of species): If we write 4 we get "http://localhost:8000/listSpecies?limit=4"
