@@ -73,11 +73,16 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
 
             ENDPOINT5b = ENDPOINT5.replace("ENSG00000157764", result3["id"])
             result5 = client(ENDPOINT5b)
-            text += "Start: "+str(result5[1]["start"])+"<br>"
-            text += "End: "+str(result5[1]["end"])+"<br>"
-            text += "Length: " + str(result5[1]["end"]-result5[1]["start"])+"<br>"
-            text += "ID: "+str(result5[1]["id"])+"<br>"
-            text += "Chromosome: "+str(result5[1]["seq_region_name"])+"<br>"
+            for i in range(len(result5)):
+                if result5[i]["id"] == result3["id"]:
+                    a = i
+            print(result5)
+            print(a)
+            text += "Start: "+str(result5[a]["start"])+"<br>"
+            text += "End: "+str(result5[a]["end"])+"<br>"
+            text += "Length: " + str(result5[a]["end"]-result5[a]["start"])+"<br>"
+            text += "ID: "+str(result5[a]["id"])+"<br>"
+            text += "Chromosome: "+str(result5[a]["seq_region_name"])+"<br>"
             page = "response.html"
 
         else:
