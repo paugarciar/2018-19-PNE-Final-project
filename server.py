@@ -42,32 +42,27 @@ class Seq:
     """A class for representing sequences"""
 
     def __init__(self, strbases):
-        self.strbases = strbases  # self.strbases now represents my initial string
+        self.strbases = strbases  # self.strbases now represents my species name
 
+    # Obtaining the ID of a species
     def id(self):
         ENDPOINT3 = "/lookup/symbol/homo_sapiens/" + self.strbases + "?content-type=application/json"
         result3 = client(ENDPOINT3)
         return result3["id"]
 
+    # Obtaining the sequence from an ID
     def gene_seq(self):
         ENDPOINT4 = "/sequence/id/" + self.id() + "?content-type=application/json"
         result4 = client(ENDPOINT4)
         return result4["seq"]
 
-
-class Seq:
-    """A class for representing sequences"""
-
-    def __init__(self, strbases):
-        self.strbases = strbases  # self.strbases now represents my initial string
-
     # Length of the string
     def len(self):
-        return len(self.strbases)  # returns the length of our string(self.strbases)
+        return len(self.gene_seq())  # returns the length of our string(self.gene_seq())
 
     # Number of a concrete base
     def count(self, base):
-        res = self.strbases.count(base)  # counting the base that we will introduce
+        res = self.gene_seq().count(base)  # counting the base that we will introduce
         return res
 
     # Percentage of a concrete base
@@ -113,6 +108,7 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
         # Assigning to the variable page different html pages names in function of the request
         text = ""
         list_species = []
+        sp = Seq(ins[-1])
 
         if self.path == "/":
             page = "main-page.html"
@@ -152,38 +148,45 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
             page = "response.html"
 
         elif calling_response == "/geneSeq":  # Using the resource /geneSeq
-
-
-
-
+            result3 = sp.gene_seq()
+            text += result3
             page = "response.html"
 
         elif calling_response == "/geneInfo":
-
+            id = sp.id()
             ENDPOINT5 = "/overlap/id/" + id + "?feature=gene;content-type=application/json"
-            result5 = client(ENDPOINT5)
-            for i in range(len(result5)):
-                if result5[i]["id"] == id:
+            result4 = client(ENDPOINT5)
+            print(result4)
+            a = ""
+            for i in range(len(result4)):
+                if result4[i]["id"] == id:
                     a = i
-            text += "Start: " + str(result5[a]["start"]) + "<br>"
-            text += "End: " + str(result5[a]["end"]) + "<br>"
-            text += "Length: " + str(result5[a]["end"] - result5[a]["start"]) + "<br>"
-            text += "ID: " + str(result5[a]["id"]) + "<br>"
-            text += "Chromosome: " + str(result5[a]["seq_region_name"]) + "<br>"
+            text += "Start: " + str(result4[a]["start"]) + "<br>"
+            text += "End: " + str(result4[a]["end"]) + "<br>"
+            text += "Length: " + str(result4[a]["end"] - result4[a]["start"] + 1) + "<br>"
+            text += "ID: " + str(result4[a]["id"]) + "<br>"
+            text += "Chromosome: " + str(result4[a]["seq_region_name"]) + "<br>"
             page = "response.html"
 
         elif calling_response == "/geneCalc":  # Using the resource /geneCalc
 
-            ENDPOINT3B = ENDPOINT3.replace("BRCA2", ins[-1])
-            result3 = client(ENDPOINT3B)
+            text += sp.results()
 
-            print(result3["id"])
+            page = "response.html"
 
-            ENDPOINT4b = ENDPOINT4.replace("ENSP00000288602", result3["id"])
-            result4 = client(ENDPOINT4b)
-            # Creating an object and printing the results
-            sequence = Seq(result4["seq"])
-            text += sequence.results()
+        elif calling_response == "/geneList":  # Using the resource /geneList
+
+            start = ins[3]
+            end = ins[-1]
+            ch = ins[1]
+            ENDPOINT6 = "/overlap/region/human/"+ch+":"+start+"-"+end+"?content-type=application/json;feature=gene"
+
+            result5 = client(ENDPOINT6)
+            print(result5)
+
+            for index in range(len(result5)):
+                text += result5[index]["external_name"]+"<br>"
+                print(result5[index]["external_name"])
 
             page = "response.html"
 
