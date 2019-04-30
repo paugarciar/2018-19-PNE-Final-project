@@ -37,6 +37,61 @@ def client(endpoint):
     return json.loads(text_json)
 
 
+# Seq classes for gene questions
+class Seq:
+    """A class for representing sequences"""
+
+    def __init__(self, strbases):
+        self.strbases = strbases  # self.strbases now represents my initial string
+
+    def id(self):
+        ENDPOINT3 = "/lookup/symbol/homo_sapiens/" + self.strbases + "?content-type=application/json"
+        result3 = client(ENDPOINT3)
+        return result3["id"]
+
+    def gene_seq(self):
+        ENDPOINT4 = "/sequence/id/" + self.id() + "?content-type=application/json"
+        result4 = client(ENDPOINT4)
+        return result4["seq"]
+
+
+class Seq:
+    """A class for representing sequences"""
+
+    def __init__(self, strbases):
+        self.strbases = strbases  # self.strbases now represents my initial string
+
+    # Length of the string
+    def len(self):
+        return len(self.strbases)  # returns the length of our string(self.strbases)
+
+    # Number of a concrete base
+    def count(self, base):
+        res = self.strbases.count(base)  # counting the base that we will introduce
+        return res
+
+    # Percentage of a concrete base
+    def perc(self, base):
+        tl = self.len()
+        for e in base:
+            n = self.count(e)
+            res = round(100.0 * n / tl, 1)  # percentage with one decimal of precision
+            return res
+
+    # Results presentation
+    def results(self):
+        bases = "ACTG"
+        s1 = "The total number of bases is: "+str(self.len())
+        s2 = ""
+        s3 = ""
+
+        for b in bases:
+            s2 += "The number of " + b + " is: " + str(self.count(b)) + "<br>"
+            s3 += "The percentage of " + b + " is: " + str(self.perc(b)) + "%" + "<br>"
+        s = s1 + "<br><br>" + s2 + "<br><br>" + s3 + "<br><br>"
+        return s
+
+
 # Class with our Handler that inheritates all his methods and properties
 class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the properties of the library
 
@@ -58,6 +113,7 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
         # Assigning to the variable page different html pages names in function of the request
         text = ""
         list_species = []
+
         if self.path == "/":
             page = "main-page.html"
 
@@ -93,6 +149,42 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
             ENDPOINT2 = "/info/assembly/"+specie+"/"+ch+"?content-type=application/json"
             result2 = client(ENDPOINT2)
             text += str(result2["length"])
+            page = "response.html"
+
+        elif calling_response == "/geneSeq":  # Using the resource /geneSeq
+
+
+
+
+            page = "response.html"
+
+        elif calling_response == "/geneInfo":
+
+            ENDPOINT5 = "/overlap/id/" + id + "?feature=gene;content-type=application/json"
+            result5 = client(ENDPOINT5)
+            for i in range(len(result5)):
+                if result5[i]["id"] == id:
+                    a = i
+            text += "Start: " + str(result5[a]["start"]) + "<br>"
+            text += "End: " + str(result5[a]["end"]) + "<br>"
+            text += "Length: " + str(result5[a]["end"] - result5[a]["start"]) + "<br>"
+            text += "ID: " + str(result5[a]["id"]) + "<br>"
+            text += "Chromosome: " + str(result5[a]["seq_region_name"]) + "<br>"
+            page = "response.html"
+
+        elif calling_response == "/geneCalc":  # Using the resource /geneCalc
+
+            ENDPOINT3B = ENDPOINT3.replace("BRCA2", ins[-1])
+            result3 = client(ENDPOINT3B)
+
+            print(result3["id"])
+
+            ENDPOINT4b = ENDPOINT4.replace("ENSP00000288602", result3["id"])
+            result4 = client(ENDPOINT4b)
+            # Creating an object and printing the results
+            sequence = Seq(result4["seq"])
+            text += sequence.results()
+
             page = "response.html"
 
         else:
