@@ -52,3 +52,13 @@ MEDIUM LEVEL
         Ex:/alignment/region/taeniopygia_guttata/2:106041430-106041480:1?content-type=application/json;species_set=..
         ..taeniopygia_guttata;species_set=gallus_gallus;method=LASTZ_NET
 
+   GET overlap/region/:species/:region
+        It gives the features such as genes or exons contained in a region
+        Ex: /overlap/region/human/7:140424943-140624564?content-type=application/json;feature=gene;feature=transcript;..
+        feature=cds;feature=exon
+
+QUESTIONS:
+-geneCalc again the total length of the sequence or of each base?
+-geneSeq is Ok in one long line or i must divide it in some lines?
+-geneList what name ?: 'external_name', 'assembly_name' or 'display_name'
+-3 test reports or one
