@@ -58,9 +58,7 @@ MEDIUM LEVEL
         feature=cds;feature=exon
 
 QUESTIONS:
--geneCalc again the total length of the sequence or of each base?
--geneSeq is Ok in one long line or i must divide it in some lines?
--geneList what name ?: 'external_name', 'assembly_name' or 'display_name'
--ENDPOINT can be written in lowercase?
--info sequence is not always a list of 3 elements in which the element of the middle is the correct
--3 test reports or one
+
+-geneList what name ?: 'external_name'
+-ENDPOINT can be written in lowercase?no
+-3 test reports or one constructive
