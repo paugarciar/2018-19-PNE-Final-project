@@ -18,6 +18,7 @@ headers = {'User-Agent': 'http-client'}
 conn = http.client.HTTPSConnection(HOSTNAME)
 
 
+# Function with the endpoint dependent part
 def client(endpoint):
     """function of a common client that asks information using json"""
 
@@ -33,7 +34,6 @@ def client(endpoint):
     # -- Read the response's body and close connection
     text_json = r1.read().decode("utf-8")
     conn.close()
-
     return json.loads(text_json)
 
 
@@ -77,14 +77,11 @@ class Seq:
     def results(self):
         bases = "ACTG"
         s1 = "The total number of bases is: "+str(self.len())
-        s2 = ""
-        s3 = ""
+        s2 = ""  # empty string to save the percentage results of the following loop
 
         for b in bases:
-            s2 += "The number of " + b + " is: " + str(self.count(b)) + "<br>"
-            s3 += "The percentage of " + b + " is: " + str(self.perc(b)) + "%" + "<br>"
-        s = s1 + "<br><br>" + s2 + "<br><br>" + s3 + "<br><br>"
-        return s
+            s2 += "The percentage of " + b + " is: " + str(self.perc(b)) + "%" + "<br>"
+        return s1 + "<br><br>" + s2
 
 
 # Class with our Handler that inheritates all his methods and properties
@@ -104,94 +101,89 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
         calling_response = self.path.split("?")[0]
         p = (self.path.replace("=", ",")).replace("&", ",")
         ins = p.split(",")  # Making a list of instructions dividing the string in the = and & symbols
-        print(ins)
-        # Assigning to the variable page different html pages names in function of the request
-        text = ""
-        list_species = []
-        sp = Seq(ins[-1])
 
-        if self.path == "/":
-            page = "main-page.html"
+        # Some important parameters
+        text = ""  # Empty string that will save the response information
+        sp = Seq(ins[-1])  # Object used in the genes calculations
+        page = "response.html"  # The page will be response except if the endpoint is "/" or it does not exist
 
-        elif calling_response == "/listSpecies":  # Using the resource /listSpecies
+        try:
+            if self.path == "/":
+                page = "main-page.html"
 
-            result0 = client(ENDPOINT0)
-            for s in result0["species"]:
-                list_species.append(s["name"])
+            elif calling_response == "/listSpecies":  # Using the resource /listSpecies
 
-            if len(ins) == 2:
-                limit = int(ins[1])
-                for i in range(limit):
-                    text += list_species[i]+"<br>"
+                result0 = client(ENDPOINT0)
+                # The variable limit has been created to avoid the error "referenced before assignment"
+                limit = ""
+                if len(ins) == 2:
+                    limit = int(ins[1])
+                # Using elif instead of else to avoid sending the list of species with 3 or more parameters
+                elif len(ins) == 1:
+                    limit = len(result0["species"])
+                for index in range(limit):
+                    text += result0["species"][index]["name"] + "<br>"
+
+            elif calling_response == "/karyotype":  # Using the resource /karyotype
+
+                ENDPOINT1 = "/info/assembly/"+ins[-1]+"?content-type=application/json"
+                result1 = client(ENDPOINT1)
+                for chrom in result1["karyotype"]:
+                    text += chrom+"<br>"
+
+            elif calling_response == "/chromosomeLength":  # Using the resource /chromosomeLength
+
+                specie = ins[1]
+                ch = ins[-1]
+                ENDPOINT2 = "/info/assembly/"+specie+"/"+ch+"?content-type=application/json"
+                result2 = client(ENDPOINT2)
+                text += str(result2["length"])
+
+            elif calling_response == "/geneSeq":  # Using the resource /geneSeq
+                text += sp.gene_seq()
+
+            elif calling_response == "/geneInfo":
+                id_number = sp.id()
+                ENDPOINT5 = "/overlap/id/" + id_number + "?feature=gene;content-type=application/json"
+                result4 = client(ENDPOINT5)
+
+                a = ""
+                for i in range(len(result4)):
+                    if result4[i]["id"] == id_number:
+                        a = i
+                text += "Start: " + str(result4[a]["start"]) + "<br>"
+                text += "End: " + str(result4[a]["end"]) + "<br>"
+                text += "Length: " + str(result4[a]["end"] - result4[a]["start"] + 1) + "<br>"
+                text += "ID: " + str(result4[a]["id"]) + "<br>"
+                text += "Chromosome: " + str(result4[a]["seq_region_name"]) + "<br>"
+
+            elif calling_response == "/geneCalc":  # Using the resource /geneCalc
+                text += sp.results()
+
+            elif calling_response == "/geneList":  # Using the resource /geneList
+
+                start = ins[3]
+                end = ins[-1]
+                ch = ins[1]
+                ENDPOINT6 = "/overlap/region/human/"+ch+":"+start+"-"+end+"?content-type=application/json;feature=gene"
+
+                result5 = client(ENDPOINT6)
+
+                for index in range(len(result5)):
+                    text += result5[index]["external_name"]+"<br>"
 
             else:
-                for s in list_species:
-                    text += s + "<br>"
+                page = "error.html"
 
-            page = "response.html"
-
-        elif calling_response == "/karyotype":  # Using the resource /karyotype
-
-            ENDPOINT1 = "/info/assembly/"+ins[1]+"?content-type=application/json"
-            result1 = client(ENDPOINT1)
-            for chrom in result1["karyotype"]:
-                text += chrom+"<br>"
-            page = "response.html"
-
-        elif calling_response == "/chromosomeLength":  # Using the resource /chromosomeLength
-
-            specie = ins[1]
-            ch = ins[-1]
-            ENDPOINT2 = "/info/assembly/"+specie+"/"+ch+"?content-type=application/json"
-            result2 = client(ENDPOINT2)
-            text += str(result2["length"])
-            page = "response.html"
-
-        elif calling_response == "/geneSeq":  # Using the resource /geneSeq
-            result3 = sp.gene_seq()
-            text += result3
-            page = "response.html"
-
-        elif calling_response == "/geneInfo":
-            id = sp.id()
-            ENDPOINT5 = "/overlap/id/" + id + "?feature=gene;content-type=application/json"
-            result4 = client(ENDPOINT5)
-            print(result4)
-            a = ""
-            for i in range(len(result4)):
-                if result4[i]["id"] == id:
-                    a = i
-            text += "Start: " + str(result4[a]["start"]) + "<br>"
-            text += "End: " + str(result4[a]["end"]) + "<br>"
-            text += "Length: " + str(result4[a]["end"] - result4[a]["start"] + 1) + "<br>"
-            text += "ID: " + str(result4[a]["id"]) + "<br>"
-            text += "Chromosome: " + str(result4[a]["seq_region_name"]) + "<br>"
-            page = "response.html"
-
-        elif calling_response == "/geneCalc":  # Using the resource /geneCalc
-
-            text += sp.results()
-
-            page = "response.html"
-
-        elif calling_response == "/geneList":  # Using the resource /geneList
-
-            start = ins[3]
-            end = ins[-1]
-            ch = ins[1]
-            ENDPOINT6 = "/overlap/region/human/"+ch+":"+start+"-"+end+"?content-type=application/json;feature=gene"
-
-            result5 = client(ENDPOINT6)
-            print(result5)
-
-            for index in range(len(result5)):
-                text += result5[index]["external_name"]+"<br>"
-                print(result5[index]["external_name"])
-
-            page = "response.html"
-
-        else:
-            page = "error.html"
+        # Dealing with some errors
+        except ValueError:
+            text += "<b>"+"Incorrect value in the parameter 'limit'"+"<br>"+"Please introduce an integer number"+"</b>"
+        except TypeError:
+            text += "<b>"+"Sorry, the endpoint '/listSpecies' does not admit three or more parameters"+"</b>"
+        except KeyError:
+            text += "<b>"+"Incorrect parameters"+"<br>"+"Please review their spelling and the amount required"+"</b>"
+        except Exception:  # In case there is an error that I haven't detected
+            text += "<b>"+"Sorry, an error has been produced"+"<br>"+"Please review the performed actions"+"</b>"
 
         # -- printing the request line
         termcolor.cprint(self.requestline, 'green')
