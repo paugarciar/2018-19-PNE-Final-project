@@ -63,25 +63,24 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
             for s in result["species"]:
                 list_species.append(s["name"])
                 #text += specie["name"]+"<br>"
-            if len(ins) == 2:
-                limit = int(ins[1])
-                for i in range(limit):
-                    text += list_species[i]+"<br>"
+            #if len(ins) == 2:
+             #   limit = int(ins[1])
+              #  for i in range(limit):
+               #     text += list_species[i]+"<br>"
 
-            else:
-                for s in list_species:
-                    text += s + "<br>"
+            #else:
+             #   for s in list_species:
+              #      text += s + "<br>"
 
 
             print(len(ins))
             # idea de mejora
-            #for index in range(len(result["species"])):
-                #text += result["species"][index]["name"]+"<br>"
-                #if len(ins) == 2:
-                    #limit = ins[1]
-                    #if index == limit:
-                        #print("B")
-                        #break
+            if len(ins) == 2:
+                limit = int(ins[1])
+            else:
+                limit = len(result["species"])
+            for index in range(limit):
+                text += result["species"][index]["name"]+"<br>"
 
             page = "response.html"
 
