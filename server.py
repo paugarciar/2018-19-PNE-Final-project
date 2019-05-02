@@ -1,3 +1,8 @@
+# Server that provides some services related with genes and chromosomes using the HTTP protocol.
+# The user introduces the parameters through the main page HTML, the data is taken from the rest.ensembl.org
+# web page and the results are presented in another HTML page.
+
+# importing the needed resources
 import http.server
 import http.client
 import json
@@ -7,9 +12,7 @@ import termcolor
 # Server's port
 PORT = 8000
 
-
 # Client
-
 HOSTNAME = "rest.ensembl.org"
 ENDPOINT0 = "/info/species?content-type=application/json"
 METHOD = "GET"
@@ -37,7 +40,7 @@ def client(endpoint):
     return json.loads(text_json)
 
 
-# Seq classes for gene questions
+# Seq class for gene questions
 class Seq:
     """A class for representing sequences"""
 
@@ -78,7 +81,6 @@ class Seq:
         bases = "ACTG"
         s1 = "The total number of bases is: "+str(self.len())
         s2 = ""  # empty string to save the percentage results of the following loop
-
         for b in bases:
             s2 += "The percentage of " + b + " is: " + str(self.perc(b)) + "%" + "<br>"
         return s1 + "<br><br>" + s2
@@ -108,7 +110,7 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
         page = "response.html"  # The page will be response except if the endpoint is "/" or it does not exist
 
         try:
-            if self.path == "/":
+            if self.path == "/":  # Using the resource / to obtain the main page with all the options
                 page = "main-page.html"
 
             elif calling_response == "/listSpecies":  # Using the resource /listSpecies
@@ -116,11 +118,12 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
                 result0 = client(ENDPOINT0)
                 # The variable limit has been created to avoid the error "referenced before assignment"
                 limit = ""
+                # The second parameter is the limit
                 if len(ins) == 2:
                     limit = int(ins[1])
                 # Using elif instead of else to avoid sending the list of species with 3 or more parameters
                 elif len(ins) == 1:
-                    limit = len(result0["species"])
+                    limit = len(result0["species"])  # If there is no limit the loop will be over all the species
                 for index in range(limit):
                     text += result0["species"][index]["name"] + "<br>"
 
@@ -128,7 +131,7 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
 
                 ENDPOINT1 = "/info/assembly/"+ins[-1]+"?content-type=application/json"
                 result1 = client(ENDPOINT1)
-                for chrom in result1["karyotype"]:
+                for chrom in result1["karyotype"]:  # Transformation into a string with intros "<br>"
                     text += chrom+"<br>"
 
             elif calling_response == "/chromosomeLength":  # Using the resource /chromosomeLength
@@ -137,28 +140,32 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
                 ch = ins[-1]
                 ENDPOINT2 = "/info/assembly/"+specie+"/"+ch+"?content-type=application/json"
                 result2 = client(ENDPOINT2)
-                text += str(result2["length"])
+                text += str(result2["length"])  # Obtaining the value that corresponds to the length keyword
 
             elif calling_response == "/geneSeq":  # Using the resource /geneSeq
-                text += sp.gene_seq()
+
+                text += sp.gene_seq()  # calling the method gene_seq to obtain the sequence of the sp object
 
             elif calling_response == "/geneInfo":
-                id_number = sp.id()
-                ENDPOINT5 = "/overlap/id/" + id_number + "?feature=gene;content-type=application/json"
-                result4 = client(ENDPOINT5)
 
-                a = ""
-                for i in range(len(result4)):
-                    if result4[i]["id"] == id_number:
+                id_number = sp.id()  # calling the method id to obtain the identity number of the sp object
+                ENDPOINT5 = "/overlap/id/" + id_number + "?feature=gene;content-type=application/json"
+                result4 = client(ENDPOINT5)  # Dictionary that contains several lists of information for different genes
+
+                a = ""  # This variable avoids the error "referenced before assignment"
+                for i in range(len(result4)):  # loop to search which gene is the one that coincides with our requisites
+                    if result4[i]["id"] == id_number:  # the correct information is in the list in which is our id gene
                         a = i
+                # Searching the values in the selected list
                 text += "Start: " + str(result4[a]["start"]) + "<br>"
                 text += "End: " + str(result4[a]["end"]) + "<br>"
-                text += "Length: " + str(result4[a]["end"] - result4[a]["start"] + 1) + "<br>"
+                text += "Length: " + str(result4[a]["end"] - result4[a]["start"] + 1) + "<br>"  # sum also 1st position
                 text += "ID: " + str(result4[a]["id"]) + "<br>"
                 text += "Chromosome: " + str(result4[a]["seq_region_name"]) + "<br>"
 
             elif calling_response == "/geneCalc":  # Using the resource /geneCalc
-                text += sp.results()
+
+                text += sp.results()  # calling the results method
 
             elif calling_response == "/geneList":  # Using the resource /geneList
 
@@ -166,14 +173,20 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
                 end = ins[-1]
                 ch = ins[1]
                 ENDPOINT6 = "/overlap/region/human/"+ch+":"+start+"-"+end+"?content-type=application/json;feature=gene"
-
                 result5 = client(ENDPOINT6)
-
+                # Searching the name of each gene in the dictionary
                 for index in range(len(result5)):
-                    text += result5[index]["external_name"]+"<br>"
+                    text += result5[index]["external_name"] + "<br>"
+
+                # Preventing some common errors
+                if start == end:
+                    text += "<b>"+"Sorry, you have introduced the same number for the start than for the end."+"</b>"
+                    text += "<b>"+"<br><br>"+"So obviously, as there is no region, there is no gene contained."+"</b>"
+                if text == "":
+                    text += "<b>"+"There is no gene in the selected region"+"</b>"
 
             else:
-                page = "error.html"
+                page = "error.html"  # If it is not one of the previous resources
 
         # Dealing with some errors
         except ValueError:
@@ -182,12 +195,13 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
             text += "<b>"+"Sorry, the endpoint '/listSpecies' does not admit three or more parameters"+"</b>"
         except KeyError:
             text += "<b>"+"Incorrect parameters"+"<br>"+"Please review their spelling and the amount required"+"</b>"
-        except Exception:  # In case there is an error that I haven't detected
+        except Exception:  # Emergency exception that has not been detected yet
             text += "<b>"+"Sorry, an error has been produced"+"<br>"+"Please review the performed actions"+"</b>"
 
         # -- printing the request line
         termcolor.cprint(self.requestline, 'green')
 
+        # -- Opening the selected page
         f = open(page, 'r')
         contents = f.read()  # reading the contents of the selected page
 
@@ -208,8 +222,9 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
 # -- MAIN PROGRAM
 
 
-socketserver.TCPServer.allow_reuse_address = True
+socketserver.TCPServer.allow_reuse_address = True  # preventing the error: "Port already in use"
 
+# main loop to attend the user
 with socketserver.TCPServer(("", PORT), TestHandler) as httpd:
 
     # "" means that the program must use the IP address of the computer
