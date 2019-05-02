@@ -206,7 +206,7 @@ checking both the ideal and the incorrect answers and making a small summary at 
 
    Summary: Clicking on the complete list option, all available species will be shown. If we introduce an integer
    number in the limit text square, we will get that number of species. But if we use more parameters than needed or
-   an incorrect limit, an error warning will appear.
+   an incorrect limit, a polite error warning message will appear.
 
 
 3. "/karyotype" ENDPOINT:
@@ -300,7 +300,7 @@ checking both the ideal and the incorrect answers and making a small summary at 
    valid, the answer will be an error message. The excess of parameters will also generate this message.
 
 
-4. "/chromosomeLength
+4. "/chromosomeLength" ENDPOINT:
     -Test1
         input: "http://localhost:8000/chromosomeLength?specie=0&chromo=j"
         output:
@@ -371,6 +371,6 @@ checking both the ideal and the incorrect answers and making a small summary at 
         </body>
         </html>
 
-    Summary: this last option has two parameters: specie (that can be written as in the last application with both
+    Summary: this last option has two parameters: specie (that can be written as in the previous application with both
     nomenclatures) and chromosome (that must be part of the karyotype of the animal in order to be correct). If some
     of the parameters does not exist or there are more than two, the response will be an error message.
