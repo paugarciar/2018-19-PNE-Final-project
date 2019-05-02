@@ -100,7 +100,7 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
         print(" Path: " + self.path)
 
         # Separating and selecting the information of the path
-        calling_response = self.path.split("?")[0]
+        res = self.path.split("?")[0]
         p = (self.path.replace("=", ",")).replace("&", ",")
         ins = p.split(",")  # Making a list of instructions dividing the string in the = and & symbols
 
@@ -113,7 +113,7 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
             if self.path == "/":  # Using the resource / to obtain the main page with all the options
                 page = "main-page.html"
 
-            elif calling_response == "/listSpecies":  # Using the resource /listSpecies
+            elif res == "/listSpecies":  # Using the resource /listSpecies
 
                 result0 = client(ENDPOINT0)
                 # The variable limit has been created to avoid the error "referenced before assignment"
@@ -127,14 +127,14 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
                 for index in range(limit):
                     text += result0["species"][index]["name"] + "<br>"
 
-            elif calling_response == "/karyotype":  # Using the resource /karyotype
+            elif res == "/karyotype":  # Using the resource /karyotype
 
                 ENDPOINT1 = "/info/assembly/"+ins[-1]+"?content-type=application/json"
                 result1 = client(ENDPOINT1)
                 for chrom in result1["karyotype"]:  # Transformation into a string with intros "<br>"
                     text += chrom+"<br>"
 
-            elif calling_response == "/chromosomeLength":  # Using the resource /chromosomeLength
+            elif res == "/chromosomeLength":  # Using the resource /chromosomeLength
 
                 specie = ins[1]
                 ch = ins[-1]
@@ -142,11 +142,11 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
                 result2 = client(ENDPOINT2)
                 text += str(result2["length"])  # Obtaining the value that corresponds to the length keyword
 
-            elif calling_response == "/geneSeq":  # Using the resource /geneSeq
+            elif res == "/geneSeq":  # Using the resource /geneSeq
 
                 text += sp.gene_seq()  # calling the method gene_seq to obtain the sequence of the sp object
 
-            elif calling_response == "/geneInfo":
+            elif res == "/geneInfo":
 
                 id_number = sp.id()  # calling the method id to obtain the identity number of the sp object
                 ENDPOINT5 = "/overlap/id/" + id_number + "?feature=gene;content-type=application/json"
@@ -163,11 +163,11 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
                 text += "ID: " + str(result4[a]["id"]) + "<br>"
                 text += "Chromosome: " + str(result4[a]["seq_region_name"]) + "<br>"
 
-            elif calling_response == "/geneCalc":  # Using the resource /geneCalc
+            elif res == "/geneCalc":  # Using the resource /geneCalc
 
                 text += sp.results()  # calling the results method
 
-            elif calling_response == "/geneList":  # Using the resource /geneList
+            elif res == "/geneList":  # Using the resource /geneList
 
                 start = ins[3]
                 end = ins[-1]
@@ -188,15 +188,24 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
             else:
                 page = "error.html"  # If it is not one of the previous resources
 
-        # Dealing with some errors
+            # improvement in the server to avoid taking as correct an extra valid parameter. Ex: gene=FRAT1&gene=BRAF
+            if res in ["/karyotype", "/chromosomeLength", "/geneSeq", "/geneInfo", "/geneCalc", "/geneList"]:
+
+                # checking the length of the instructions and generating a KeyError if they are not correct
+                if len(ins) > 2 and res != "/chromosomeLength" and res != "/geneList":
+                    text += client(ENDPOINT0)["e"]
+                elif (len(ins) > 4 and res == "/chromosomeLength") or (len(ins) > 6 and res == "/geneList"):
+                    text += client(ENDPOINT0)["e"]
+
+        # Dealing with the main errors
         except ValueError:
-            text += "<b>"+"Incorrect value in the parameter 'limit'"+"<br>"+"Please introduce an integer number"+"</b>"
+            text = "<b>"+"Incorrect value in the parameter 'limit'"+"<br>"+"Please introduce an integer number"+"</b>"
         except TypeError:
-            text += "<b>"+"Sorry, the endpoint '/listSpecies' does not admit three or more parameters"+"</b>"
+            text = "<b>"+"Sorry, the endpoint '/listSpecies' does not admit three or more parameters"+"</b>"
         except KeyError:
-            text += "<b>"+"Incorrect parameters"+"<br>"+"Please review their spelling and the amount required"+"</b>"
+            text = "<b>"+"Incorrect parameters"+"<br>"+"Please review their spelling and the amount required"+"</b>"
         except Exception:  # Emergency exception that has not been detected yet
-            text += "<b>"+"Sorry, an error has been produced"+"<br>"+"Please review the performed actions"+"</b>"
+            text = "<b>"+"Sorry, an error has been produced"+"<br>"+"Please review the performed actions"+"</b>"
 
         # -- printing the request line
         termcolor.cprint(self.requestline, 'green')
