@@ -658,24 +658,6 @@ the end.
 
 
    -Test3
-       input: "http://localhost:8000/geneList?chromo=5&start=1&end=1"
-       output:
-       <!DOCTYPE html>
-        <html lang="en" dir="ltr">
-        <head>
-            <meta charset="UTF-8">
-            <title>response</title>
-        </head>
-        <body style="background-color: paleturquoise;">
-                <h1>Response:</h1>
-                <p><b>Sorry, you have introduced the same number for the start than for the end.</b><b><br><br>So obviously, as there is no region, there is no gene contained.</b></p>
-
-
-        </body>
-        </html>
-
-
-   -Test4
         input: "http://localhost:8000/geneList?chromo=1&start=0&end=30000"
         output:
         <!DOCTYPE html>
@@ -693,7 +675,7 @@ the end.
         </html>
 
 
-    -Test5
+    -Test4
         input: "http://localhost:8000/geneList?chromo=1&start=3&end=4"
         output:
         <!DOCTYPE html>
@@ -711,5 +693,5 @@ the end.
         </html>
 
     Summary: delimiting a concrete region of a human chromosome, we will get all the genes contained in it. If we
-    write invalid parameters an error message will advice the user to change them. If we write the same number for
-    the start than for the end, there will be no genes contained, this also happen in a very small region.
+    write invalid parameters an error message will advice the user to change them. If we choose a part of a
+    chromosome with no genes contained in it, another different message response will be produced.
