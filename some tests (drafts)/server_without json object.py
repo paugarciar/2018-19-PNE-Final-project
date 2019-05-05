@@ -83,7 +83,7 @@ class Seq:
         s2 = ""  # empty string to save the percentage results of the following loop
         for b in bases:
             s2 += "The percentage of " + b + " is: " + str(self.perc(b)) + "%" + "<br>"
-        return s1 + "<br><br>"+ s2
+        return s1 + "<br><br>" + s2
 
 
 # Class with our Handler that inheritates all his methods and properties
@@ -103,19 +103,13 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
         res = self.path.split("?")[0]
         p = (self.path.replace("=", ",")).replace("&", ",")
         ins = p.split(",")  # Making a list of instructions dividing the string in the = and & symbols
-        print(ins)
 
         # Some important parameters
-        text = []  # Empty list that will save the response information"
-        j_dict = {}  # Dictionary that will save the response information when json_opt == "json1"
+        text = ""  # Empty string that will save the response information
+        sp = Seq(ins[-1])  # Object used in the genes calculations
         page = "response.html"  # The page will be response except if the endpoint is "/" or it does not exist
-        keyword_j_dict = ""
-        y = []  # parameter only used in case we want to print a unique string contained in a list
 
         try:
-            if "gene" in res:
-                sp = Seq(ins[1])  # Object used in the genes calculations
-
             if self.path == "/":  # Using the resource / to obtain the main page with all the options
                 page = "main-page.html"
 
@@ -124,45 +118,33 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
                 result0 = client(ENDPOINT0)
                 # The variable limit has been created to avoid the error "referenced before assignment"
                 limit = ""
-                if "json=1" in self.path:
-                    j = 4
-                    k = 2
-                else:
-                    j = 2
-                    k = 1
-
-                if len(ins) == j:
+                # The second parameter is the limit
+                if len(ins) == 2:
                     limit = int(ins[1])
-                # Using elif instead of else to avoid sending the list of species with excess of parameters
-                elif len(ins) == k:
+                # Using elif instead of else to avoid sending the list of species with 3 or more parameters
+                elif len(ins) == 1:
                     limit = len(result0["species"])  # If there is no limit the loop will be over all the species
                 for index in range(limit):
-                    text.append(result0["species"][index]["name"])
-                keyword_j_dict = "species"
+                    text += result0["species"][index]["name"] + "<br>"
 
             elif res == "/karyotype":  # Using the resource /karyotype
 
-                ENDPOINT1 = "/info/assembly/"+ins[1]+"?content-type=application/json"
+                ENDPOINT1 = "/info/assembly/"+ins[-1]+"?content-type=application/json"
                 result1 = client(ENDPOINT1)
                 for chrom in result1["karyotype"]:  # Transformation into a string with intros "<br>"
-                    text.append(chrom)
-                keyword_j_dict = "karyotype"
+                    text += chrom+"<br>"
 
             elif res == "/chromosomeLength":  # Using the resource /chromosomeLength
 
                 specie = ins[1]
-                ch = ins[3]
+                ch = ins[-1]
                 ENDPOINT2 = "/info/assembly/"+specie+"/"+ch+"?content-type=application/json"
                 result2 = client(ENDPOINT2)
-                text.append(str(result2["length"]))  # Obtaining the value that corresponds to the length keyword
-                keyword_j_dict = "length"
-                y.append(0)
+                text += str(result2["length"])  # Obtaining the value that corresponds to the length keyword
 
             elif res == "/geneSeq":  # Using the resource /geneSeq
 
-                text.append(sp.gene_seq()) # calling the method gene_seq to obtain the sequence of the sp object
-                keyword_j_dict = "seq"
-                y.append(0)
+                text += sp.gene_seq()  # calling the method gene_seq to obtain the sequence of the sp object
 
             elif res == "/geneInfo":
 
@@ -175,91 +157,70 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
                     if result4[i]["id"] == id_number:  # the correct information is in the list in which is our id gene
                         a = i
                 # Searching the values in the selected list
-
-                text.append("Start: " + str(result4[a]["start"]))
-                text.append("End: " + str(result4[a]["end"]))
-                text.append("Length: " + str(result4[a]["end"] - result4[a]["start"] + 1))  # sum also 1st position
-                text.append("ID: " + str(result4[a]["id"]))
-                text.append("Chromosome: " + str(result4[a]["seq_region_name"]))
-
-                keyword_j_dict = a
+                text += "Start: " + str(result4[a]["start"]) + "<br>"
+                text += "End: " + str(result4[a]["end"]) + "<br>"
+                text += "Length: " + str(result4[a]["end"] - result4[a]["start"] + 1) + "<br>"  # sum also 1st position
+                text += "ID: " + str(result4[a]["id"]) + "<br>"
+                text += "Chromosome: " + str(result4[a]["seq_region_name"]) + "<br>"
 
             elif res == "/geneCalc":  # Using the resource /geneCalc
 
-                text.append(sp.results())  # calling the results method
-                text = text[0].replace("<br><br>", "<br>").rstrip("<br>").split("<br>")
-                keyword_j_dict = "Calculus about the gene sequence"
+                text += sp.results()  # calling the results method
 
             elif res == "/geneList":  # Using the resource /geneList
 
                 start = ins[3]
-                end = ins[5]
+                end = ins[-1]
                 ch = ins[1]
                 ENDPOINT6 = "/overlap/region/human/"+ch+":"+start+"-"+end+"?content-type=application/json;feature=gene"
                 result5 = client(ENDPOINT6)
                 # Searching the name of each gene in the dictionary
                 for index in range(len(result5)):
-                    text.append(result5[index]["external_name"])
+                    text += result5[index]["external_name"] + "<br>"
 
-                if len(text) == 0:
-                    text.append("<b>"+"There is no gene in the selected region"+"</b>")
-                keyword_j_dict = "External name of the genes"
+                # Preventing some common errors
+                if start == end:
+                    text += "<b>"+"Sorry, you have introduced the same number for the start than for the end."+"</b>"
+                    text += "<b>"+"<br><br>"+"So obviously, as there is no region, there is no gene contained."+"</b>"
+                if text == "":
+                    text += "<b>"+"There is no gene in the selected region"+"</b>"
 
             else:
                 page = "error.html"  # If it is not one of the previous resources
 
             # improvement in the server to avoid taking as correct an extra valid parameter. Ex: gene=FRAT1&gene=BRAF
             if res in ["/karyotype", "/chromosomeLength", "/geneSeq", "/geneInfo", "/geneCalc", "/geneList"]:
-                i = 2
-                j = 4
-                k = 6
-                if "json=1" in self.path:
-                    i += 2
-                    j += 2
-                    k += 2
 
                 # checking the length of the instructions and generating a KeyError if they are not correct
-                if len(ins) > i and res != "/chromosomeLength" and res != "/geneList":
-                    text.append(client(ENDPOINT0)["e"])
-                elif (len(ins) > j and res == "/chromosomeLength") or (len(ins) > k and res == "/geneList"):
-                    text.append(client(ENDPOINT0)["e"])
+                if len(ins) > 2 and res != "/chromosomeLength" and res != "/geneList":
+                    text += client(ENDPOINT0)["e"]
+                elif (len(ins) > 4 and res == "/chromosomeLength") or (len(ins) > 6 and res == "/geneList"):
+                    text += client(ENDPOINT0)["e"]
 
         # Dealing with the main errors
         except ValueError:
-            text = ["<b>"+"Incorrect value in the parameter 'limit'"+"<br>"+"Please introduce an integer number"+"</b>"]
+            text = "<b>"+"Incorrect value in the parameter 'limit'"+"<br>"+"Please introduce an integer number"+"</b>"
         except TypeError:
-            text = ["<b>"+"Sorry, the endpoint '/listSpecies' does not admit three or more parameters"+"</b>"]
+            text = "<b>"+"Sorry, the endpoint '/listSpecies' does not admit three or more parameters"+"</b>"
         except KeyError:
-            text = ["<b>"+"Incorrect parameters"+"<br>"+"Please review their spelling and the amount required"+"</b>"]
-        #except Exception:  # Emergency exception that has not been detected yet
-            #text = ["<b>"+"Sorry, an error has been produced"+"<br>"+"Please review the performed actions"+"</b>"]
+            text = "<b>"+"Incorrect parameters"+"<br>"+"Please review their spelling and the amount required"+"</b>"
+        except Exception:  # Emergency exception that has not been detected yet
+            text = "<b>"+"Sorry, an error has been produced"+"<br>"+"Please review the performed actions"+"</b>"
 
         # -- printing the request line
         termcolor.cprint(self.requestline, 'green')
 
+        # -- Opening the selected page
+        f = open(page, 'r')
+        contents = f.read()  # reading the contents of the selected page
+
+        # If the html response page is requested change the word text by the text of the user
+        if page == "response.html":
+            contents = contents.replace("text", text)
+
         # Generating and sending the response message according to the request
-        if "json=1" in self.path:
-            h = 'application/json'
-            if y == [0]:
-                j_dict[keyword_j_dict] = text[0]
-            else:
-                j_dict[keyword_j_dict] = text
-            contents = json.dumps(j_dict)
-        else:
-            h = 'text/html'
-            # -- Opening the selected page
-            f = open(page, 'r')
-            contents = f.read()  # reading the contents of the selected page
-
-            # If the html response page is requested change the word text by the information requested
-            if page == "response.html":
-                information = ""
-                for string in text:
-                    information += string + "<br>"
-                contents = contents.replace("text", information)
-
         self.send_response(200)
-        self.send_header('Content-Type', h)
+        self.send_header('Content-Type', 'text/html')
         self.send_header('Content-Length', len(str.encode(contents)))
         self.end_headers()
 
