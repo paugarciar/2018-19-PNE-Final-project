@@ -212,6 +212,7 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
 
             else:
                 page = "error.html"  # If it is not one of the previous resources
+                keyword_j_dict = "ERROR: this is a non valid endpoint"
 
             # improvement in the server to avoid taking as correct an extra valid parameter. Ex: gene=FRAT1&gene=BRAF
             if res in ["/karyotype", "/chromosomeLength", "/geneSeq", "/geneInfo", "/geneCalc", "/geneList"]:
@@ -233,7 +234,7 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
         except ValueError:
             text = ["<b>"+"Incorrect value in the parameter 'limit'"+"<br>"+"Please introduce an integer number"+"</b>"]
         except TypeError:
-            text = ["<b>"+"Sorry, '/listSpecies' admits a maximum of 4 parameters with json=1 and 3 without it"+"</b>"]
+            text = ["<b>"+"Sorry, '/listSpecies' only admits the parameter limit alone or with one json"+"</b>"]
         except KeyError:
             text = ["<b>"+"Incorrect parameters"+"<br>"+"Please review their spelling and the amount required"+"</b>"]
 
