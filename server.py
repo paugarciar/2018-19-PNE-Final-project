@@ -113,6 +113,7 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
         page = "response.html"  # Our page will be response except if the endpoint is "/" or it does not exist
         keyword_j_dict = ""  # Keyword of j_dict to which we will assign specific values of text list
         y = []  # parameter only used in case we want to print a unique string contained in a list
+        code = 200  # if everything is OK!
 
         # Classification of the information requested in function of the resource
         try:
@@ -213,6 +214,7 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
             else:
                 page = "error.html"  # If it is not one of the previous resources
                 keyword_j_dict = "ERROR: this is a non valid endpoint"
+                code = 404  # the request is not Ok!
 
             # improvement in the server to avoid taking as correct an extra valid parameter. Ex: gene=FRAT1&gene=BRAF
             if res in ["/karyotype", "/chromosomeLength", "/geneSeq", "/geneInfo", "/geneCalc", "/geneList"]:
@@ -233,10 +235,13 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
         # Dealing with the main errors
         except ValueError:
             text = ["<b>"+"Incorrect value in the parameter 'limit'"+"<br>"+"Please introduce an integer number"+"</b>"]
+            code = 404  # the request is not Ok!
         except TypeError:
             text = ["<b>"+"Sorry, '/listSpecies' only admits the parameter limit alone or with one json"+"</b>"]
+            code = 404  # the request is not Ok!
         except KeyError:
             text = ["<b>"+"Incorrect parameters"+"<br>"+"Please review their spelling and the amount required"+"</b>"]
+            code = 404  # the request is not Ok!
 
         # -- printing the request line
         termcolor.cprint(self.requestline, 'green')
@@ -266,7 +271,7 @@ class TestHandler(http.server.BaseHTTPRequestHandler):  # Objects with the prope
                 contents = contents.replace("text", information)
 
         # -- Sending the response message
-        self.send_response(200)
+        self.send_response(code)
         self.send_header('Content-Type', h)
         self.send_header('Content-Length', len(str.encode(contents)))
         self.end_headers()
